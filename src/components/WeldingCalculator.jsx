@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
 const WeldingCalculator = () => {
   const [vesselDiameter, setVesselDiameter] = useState("");
   const [vesselLength, setVesselLength] = useState("");
@@ -24,10 +25,54 @@ const WeldingCalculator = () => {
   const [nozzleRootFace, setNozzleRootFace] = useState("");
   const [nozzleWeldType, setNozzleWeldType] = useState("Single V");
 
-  const weldTypes = ["Single V", "Double V", "Groove", "Fillet"];
+  const [isFormValid, setIsFormValid] = useState(false);
 
-  const handleCalculate = () => {
-    console.log("Calculating...", {
+  const removeSpaces = (str) => str.replace(/\s+/g, "");
+  const weldTypes = ["Single V", "Double V", "Groove", "Fillet"];
+  const navigate = useNavigate();
+
+  // Validate form fields
+  useEffect(() => {
+    const isValid =
+      vesselDiameter &&
+      vesselLength &&
+      vesselThickness &&
+      longitudinalSeams &&
+      circumferentialSeams &&
+      longitudinalRootGap &&
+      longitudinalBevelAngle &&
+      longitudinalRootFace &&
+      circumferentialRootGap &&
+      circumferentialBevelAngle &&
+      circumferentialRootFace &&
+      nozzleRootGap &&
+      nozzleBevelAngle &&
+      nozzleRootFace;
+    setIsFormValid(isValid);
+  }, [
+    vesselDiameter,
+    vesselLength,
+    vesselThickness,
+    longitudinalSeams,
+    circumferentialSeams,
+    longitudinalRootGap,
+    longitudinalBevelAngle,
+    longitudinalRootFace,
+    circumferentialRootGap,
+    circumferentialBevelAngle,
+    circumferentialRootFace,
+    nozzleRootGap,
+    nozzleBevelAngle,
+    nozzleRootFace,
+  ]);
+
+  const handleCalculate = (isFormValid) => {
+    if (isFormValid) {
+      toast.error("Please fill out all fields before proceeding.");
+
+      return;
+    }
+    const formData = {
       vesselDiameter,
       vesselLength,
       vesselThickness,
@@ -45,11 +90,18 @@ const WeldingCalculator = () => {
       nozzleBevelAngle,
       nozzleRootFace,
       nozzleWeldType,
-    });
+    };
+    navigate("/calculatorResult", { state: { formData } });
   };
 
   const renderWeldDiagram = (weldType) => {
-    return <div className="weld-diagram">{weldType} Diagram (Placeholder)</div>; // Replace with actual diagrams
+    let imageName = removeSpaces(weldType);
+    imageName = imageName + ".svg";
+    return (
+      <div className="weld-diagram">
+        <img src={`/${imageName}`} alt={`${weldType} Diagram`} />
+      </div>
+    );
   };
 
   return (
@@ -57,7 +109,7 @@ const WeldingCalculator = () => {
       <h1>Welding Electrode Calculator</h1>
 
       <div className="section">
-        <h2 className={"card-header"}>Welding Deposition Calculator</h2>
+        <h2 className="card-header">Welding Deposition Calculator</h2>
         <div className="input-grid">
           <input
             type="text"
@@ -128,7 +180,7 @@ const WeldingCalculator = () => {
         },
       ].map((section, index) => (
         <div key={index} className="section weld-section">
-          <h2 className={"card-header"}>{section.title}</h2>
+          <h2 className="card-header">{section.title}</h2>
           <div className="input-grid">
             <input
               type="text"
@@ -167,7 +219,11 @@ const WeldingCalculator = () => {
         </div>
       ))}
 
-      <button onClick={handleCalculate} className="calculate-button">
+      <button
+        onClick={() => handleCalculate(!isFormValid)}
+        className="calculate-button"
+        // disabled={!isFormValid} // Disable button if form is invalid
+      >
         Calculate
       </button>
 
@@ -175,14 +231,14 @@ const WeldingCalculator = () => {
         .container {
           font-family: sans-serif;
           padding: 20px;
-          width: 100%; /* Ensures full width of the viewport */
-          margin: 0 auto; /* Centers the container horizontally */
+          width: 80%;
+          margin: 0 auto;
         }
 
         .section {
           border: 1px solid #ddd;
           padding: 20px;
-          width: 100%; /* Ensures sections take full width within container */
+          width: 100%;
           margin-bottom: 20px;
           border-radius: 5px;
           background-color: #f9f9f9;
@@ -216,6 +272,10 @@ const WeldingCalculator = () => {
           padding: 20px;
           margin-top: 10px;
           text-align: center;
+        }
+        .weld-diagram img {
+          max-width: 100%;
+          height: auto;
         }
         .calculate-button {
           background-color: #007bff;
